@@ -43,6 +43,6 @@ jobs:
         with:
           verb: run
           # Arguments to pass to CLI
-          args: go run main.go build
+          args: --silent go run main.go build
           
           

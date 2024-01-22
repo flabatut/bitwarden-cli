@@ -13,13 +13,11 @@ import (
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
 	Use:   "build",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Build and push docker images and binaries",
+	Long: `- build binaries (all os/arch)
+	- build docker images (all arch)
+	- push docker images to ghcr registry
+	- push binaries to github`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("build called")
 		if err := build.Build(cmd.Context()); err != nil {
