@@ -41,6 +41,7 @@ jobs:
         # uses: dagger/dagger-for-github@e86a41a730841597c2b728134e83596e4e9c7804
         uses: dagger/dagger-for-github@v5.1.0
         with:
+          verb: run
           # Arguments to pass to CLI
           args: go run main.go build
           
