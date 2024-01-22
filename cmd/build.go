@@ -8,6 +8,7 @@ import (
 
 	"github.com/flabatut/bitwarden-cli/pkg/build"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // buildCmd represents the build command
@@ -20,7 +21,16 @@ var buildCmd = &cobra.Command{
 	- push binaries to github`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("build called")
-		if err := build.Build(cmd.Context()); err != nil {
+		w := &build.Workflow{
+			PublishAddr:          viper.GetString("publishAddr"),
+			ReleaseVersion:       viper.GetString("releaseVersion"),
+			BuilderNodeJSVersion: viper.GetString("builderNodeJSVersion"),
+			RunnerEntryPointPath: viper.GetString("runnerEntryPointPath"),
+			BuilderWorkDir:       viper.GetString("builderWorkDir"),
+			BuilderImage:         viper.GetString("builderImage"),
+			RunnerImage:          viper.GetString("runnerImage"),
+		}
+		if err := w.Build(cmd.Context()); err != nil {
 			fmt.Println(err)
 		}
 	},
@@ -38,4 +48,15 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// buildCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	viper.SetDefault("builderWorkDir", "/build")                                                      // same as Dockerfile WORKDIR
+	viper.SetDefault("builderImage", "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye") // same as Dockerfile FROM, image for builder container
+	viper.SetDefault("builderNodeJSVersion", "latest")                                                // vercel compatible format https://github.com/vercel/pkg
+	viper.SetDefault("runnerImage", "docker.io/debian:bullseye-slim")                                 // same as Dockerfile FROM, image for final target container
+	viper.SetDefault("runnerEntryPointPath", "/entrypoint")                                           // same as Dockerfile ENTRYPOINT
+	viper.SetDefault("releaseVersion", "v2024.1.0")
+	viper.SetDefault("publishAddr", "ghcr.io/flabatut/bitwarden-cli:latest")
+	// if using local registry (https://docs.dagger.io/252029/load-images-local-docker-engine/#approach-2-use-a-local-registry-server)
+	// viper.SetDefault("publishAddr", "localhost:5000/bitwarden-cli:latest")
+
 }

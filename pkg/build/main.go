@@ -8,7 +8,18 @@ import (
 	"strings"
 
 	"dagger.io/dagger"
+	// "github.com/spf13/viper"
 )
+
+type Workflow struct {
+	PublishAddr          string
+	ReleaseVersion       string
+	BuilderNodeJSVersion string
+	RunnerEntryPointPath string
+	BuilderWorkDir       string
+	BuilderImage         string
+	RunnerImage          string
+}
 
 var platforms = []dagger.Platform{
 	"darwin/amd64", // a.k.a. x86_64
@@ -17,23 +28,13 @@ var platforms = []dagger.Platform{
 	"linux/arm64",  // a.k.a. aarch64
 }
 
-const (
-	workDir     = "/build"
-	publishAddr = "ghcr.io/flabatut/bitwarden-cli:latest"
-	// publishAddr         = "localhost:5000/toto:latest"
-	releaseVersion      = "v2024.1.0"
-	zipFile             = "cli-" + releaseVersion + ".zip"
-	downloadUrl         = "https://github.com/bitwarden/clients/archive/refs/tags/" + zipFile
-	builderImage        = "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye"
-	extractedZipDirName = "clients-cli-" + releaseVersion
-	runnerImage         = "docker.io/debian:bullseye-slim"
-	entrypoint          = "/entrypoint"
-	defaultNodeVersion  = "latest"
-)
-
-func Build(ctx context.Context) error {
+func (w *Workflow) Build(ctx context.Context) error {
 	fmt.Println("Building with Dagger")
-
+	var (
+		zipFile             = "cli-" + w.ReleaseVersion + ".zip"
+		downloadUrl         = "https://github.com/bitwarden/clients/archive/refs/tags/" + zipFile
+		extractedZipDirName = "clients-cli-" + w.ReleaseVersion
+	)
 	// initialize Dagger client
 	client, err := dagger.Connect(ctx, dagger.WithLogOutput(os.Stderr))
 	if err != nil {
@@ -44,18 +45,18 @@ func Build(ctx context.Context) error {
 	// set the base container
 	// set environment variables
 	builder := client.Container().
-		From(builderImage).
+		From(w.BuilderImage).
 		WithEnvVariable("NODE_ENV", "production").
 		// Checkout release tarball
-		WithWorkdir(workDir).
+		WithWorkdir(w.BuilderWorkDir).
 		WithExec([]string{"apt", "install", "-y", "make", "python3", "g++"}).
 		WithExec([]string{"wget", downloadUrl}).
 		WithExec([]string{"unzip", zipFile}).
 		// Configure build environment
-		WithWorkdir(filepath.Join(workDir, extractedZipDirName)).
+		WithWorkdir(filepath.Join(w.BuilderWorkDir, extractedZipDirName)).
 		WithExec([]string{"npm", "install", "--include", "dev"}).
 		// Build binaries
-		WithWorkdir(filepath.Join(workDir, extractedZipDirName, "/apps/cli")).
+		WithWorkdir(filepath.Join(w.BuilderWorkDir, extractedZipDirName, "/apps/cli")).
 		WithExec([]string{"npm", "run", "build:prod"}).
 		WithExec([]string{"npm", "run", "clean"})
 
@@ -63,7 +64,7 @@ func Build(ctx context.Context) error {
 	containerPlatformVariants := make([]*dagger.Container, 0, len(platforms))
 	for _, platform := range platforms {
 		// forge npm pkg target platform name
-		targetPlatform, err := getTargetPlatform(platform)
+		targetPlatform, err := w.getTargetPlatform(platform)
 		if err != nil {
 			panic(err)
 		}
@@ -73,15 +74,15 @@ func Build(ctx context.Context) error {
 			archName = strings.Split(string(platform), "/")[1]
 		)
 		// forge binary output path
-		distOutput := filepath.Join(workDir, "bw-"+osName+"-"+archName)
+		distOutput := filepath.Join(w.BuilderWorkDir, "bw-"+osName+"-"+archName)
 		// cross compile for platform
 		builder = builder.WithExec([]string{"npx", "pkg", ".", "--targets", targetPlatform, "--output", distOutput})
 
 		// create the runner
 		runner := client.Container(dagger.ContainerOpts{Platform: platform}).
-			From(runnerImage).
-			WithFile(entrypoint, builder.File(distOutput)).
-			WithEntrypoint([]string{entrypoint})
+			From(w.RunnerImage).
+			WithFile(w.RunnerEntryPointPath, builder.File(distOutput)).
+			WithEntrypoint([]string{w.RunnerEntryPointPath})
 
 		// only build docker images for linux supported
 		if osName == "linux" {
@@ -91,7 +92,7 @@ func Build(ctx context.Context) error {
 
 	// docker push
 	imageDigest, err := client.Container().
-		Publish(ctx, publishAddr, dagger.ContainerPublishOpts{
+		Publish(ctx, w.PublishAddr, dagger.ContainerPublishOpts{
 			PlatformVariants: containerPlatformVariants,
 		})
 	if err != nil {
@@ -104,7 +105,7 @@ func Build(ctx context.Context) error {
 
 // getTargetPlatform returns the name of a npm pkg compatible target (<nodeVersion>-<os>-<arch>) based
 // on platform name (os/arch)
-func getTargetPlatform(platform dagger.Platform) (string, error) {
+func (w *Workflow) getTargetPlatform(platform dagger.Platform) (string, error) {
 	var osName, archName string
 
 	switch {
@@ -127,5 +128,5 @@ func getTargetPlatform(platform dagger.Platform) (string, error) {
 	case archName == "":
 		return "", fmt.Errorf("architecture unsupported: %s", platform)
 	}
-	return fmt.Sprintf("%s-%s-%s", defaultNodeVersion, osName, archName), nil
+	return fmt.Sprintf("%s-%s-%s", w.BuilderNodeJSVersion, osName, archName), nil
 }
