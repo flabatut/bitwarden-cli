@@ -19,9 +19,10 @@ var buildCmd = &cobra.Command{
 	- build docker images (all arch)
 	- push docker images to ghcr registry
 	- push binaries to github`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("build called")
 		w := &build.Workflow{
+			Client:               daggerClient,
 			PublishAddr:          viper.GetString("publishAddr"),
 			ReleaseVersion:       viper.GetString("releaseVersion"),
 			BuilderNodeJSVersion: viper.GetString("builderNodeJSVersion"),
@@ -29,10 +30,12 @@ var buildCmd = &cobra.Command{
 			BuilderWorkDir:       viper.GetString("builderWorkDir"),
 			BuilderImage:         viper.GetString("builderImage"),
 			RunnerImage:          viper.GetString("runnerImage"),
+			BuilderPlatforms:     platforms,
 		}
 		if err := w.Build(cmd.Context()); err != nil {
-			fmt.Println(err)
+			return err
 		}
+		return nil
 	},
 }
 
@@ -58,5 +61,4 @@ func init() {
 	viper.SetDefault("publishAddr", "ghcr.io/flabatut/bitwarden-cli:latest")
 	// if using local registry (https://docs.dagger.io/252029/load-images-local-docker-engine/#approach-2-use-a-local-registry-server)
 	// viper.SetDefault("publishAddr", "localhost:5000/bitwarden-cli:latest")
-
 }

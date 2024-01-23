@@ -1,18 +1,28 @@
 /*
 Copyright © 2024 Franck Labatut
-
 */
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
+	"dagger.io/dagger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile      string
+	daggerClient *dagger.Client
+	platforms    = []dagger.Platform{ // TODO: use viper with mapstruct
+		"darwin/amd64", // a.k.a. x86_64
+		"darwin/arm64", // a.k.a. aarch64
+		"linux/amd64",  // a.k.a. x86_64
+		"linux/arm64",  // a.k.a. aarch64
+	}
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -39,8 +49,8 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
+	cobra.OnInitialize(initConfig, initDaggerClient)
+	cobra.OnFinalize(deferDaggerClient)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
@@ -67,11 +77,24 @@ func initConfig() {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".bitwarden-cli")
 	}
-
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.SetEnvPrefix("BWCLI_") // Support for env vars matching prefix below
+	viper.AutomaticEnv()         // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func initDaggerClient() {
+	fmt.Println("Starting Dagger Engine session")
+	var err error
+	daggerClient, err = dagger.Connect(context.Background(), dagger.WithLogOutput(os.Stderr))
+	cobra.CheckErr(err)
+}
+
+func deferDaggerClient() {
+	fmt.Println("Closing Dagger Engine session")
+	err := daggerClient.Close()
+	cobra.CheckErr(err)
 }

@@ -1,6 +1,5 @@
 /*
 Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -8,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	// "github.com/spf13/viper"
 )
 
 // imageCmd represents the image command

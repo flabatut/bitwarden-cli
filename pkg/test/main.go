@@ -1,4 +1,4 @@
-package build
+package test
 
 import (
 	"context"
@@ -19,9 +19,11 @@ type Workflow struct {
 	BuilderImage         string
 	RunnerImage          string
 	BuilderPlatforms     []dagger.Platform
+	variantsImages       []*dagger.Container
+	variantsArtifacts    []*dagger.Container
 }
 
-func (w *Workflow) Build(ctx context.Context) error {
+func (w *Workflow) Test(ctx context.Context) error {
 	fmt.Println("Building with Dagger")
 	var (
 		zipFile             = "cli-" + w.ReleaseVersion + ".zip"
@@ -47,7 +49,7 @@ func (w *Workflow) Build(ctx context.Context) error {
 		WithExec([]string{"npm", "run", "build:prod"}).
 		WithExec([]string{"npm", "run", "clean"})
 
-	containerPlatformVariants := make([]*dagger.Container, 0, len(w.BuilderPlatforms))
+	// containerPlatformVariants := make([]*dagger.Container, 0, len(w.BuilderPlatforms))
 	for _, platform := range w.BuilderPlatforms {
 		// forge npm pkg target platform name
 		targetPlatform, err := w.getTargetPlatform(platform)
@@ -72,20 +74,11 @@ func (w *Workflow) Build(ctx context.Context) error {
 
 		// only build docker images for linux supported
 		if osName == "linux" {
-			containerPlatformVariants = append(containerPlatformVariants, runner)
+			w.variantsImages = append(w.variantsImages, runner)
 		}
+		// all os/arch supported for binaries artifacts
+		w.variantsArtifacts = append(w.variantsArtifacts, runner)
 	}
-
-	// docker push
-	imageDigest, err := w.Client.Container().
-		Publish(ctx, w.PublishAddr, dagger.ContainerPublishOpts{
-			PlatformVariants: containerPlatformVariants,
-		})
-	if err != nil {
-		return err
-	}
-	fmt.Println("published multi-platform image with digest", imageDigest)
-
 	return nil
 }
 
@@ -115,4 +108,12 @@ func (w *Workflow) getTargetPlatform(platform dagger.Platform) (string, error) {
 		return "", fmt.Errorf("architecture unsupported: %s", platform)
 	}
 	return fmt.Sprintf("%s-%s-%s", w.BuilderNodeJSVersion, osName, archName), nil
+}
+
+func (w *Workflow) GetImageVariants() []*dagger.Container {
+	return w.variantsImages
+}
+
+func (w *Workflow) GetArtifactVariants() []*dagger.Container {
+	return w.variantsArtifacts
 }

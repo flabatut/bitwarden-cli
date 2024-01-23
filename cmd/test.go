@@ -1,13 +1,14 @@
 /*
 Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
 	"fmt"
 
+	"github.com/flabatut/bitwarden-cli/pkg/test"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // testCmd represents the test command
@@ -20,8 +21,25 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("test called")
+		w := &test.Workflow{
+			Client:               daggerClient,
+			PublishAddr:          viper.GetString("publishAddr"),
+			ReleaseVersion:       viper.GetString("releaseVersion"),
+			BuilderNodeJSVersion: viper.GetString("builderNodeJSVersion"),
+			RunnerEntryPointPath: viper.GetString("runnerEntryPointPath"),
+			BuilderWorkDir:       viper.GetString("builderWorkDir"),
+			BuilderImage:         viper.GetString("builderImage"),
+			RunnerImage:          viper.GetString("runnerImage"),
+			BuilderPlatforms:     platforms,
+		}
+		ee := w.GetImageVariants()
+		fmt.Print(ee)
+		if err := w.Test(cmd.Context()); err != nil {
+			return err
+		}
+		return nil
 	},
 }
 
