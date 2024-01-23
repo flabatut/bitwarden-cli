@@ -25,7 +25,6 @@ to quickly create a Cobra application.`,
 		fmt.Println("test called")
 		w := &test.Workflow{
 			Client:               daggerClient,
-			PublishAddr:          viper.GetString("publishAddr"),
 			ReleaseVersion:       viper.GetString("releaseVersion"),
 			BuilderNodeJSVersion: viper.GetString("builderNodeJSVersion"),
 			RunnerEntryPointPath: viper.GetString("runnerEntryPointPath"),
@@ -34,8 +33,6 @@ to quickly create a Cobra application.`,
 			RunnerImage:          viper.GetString("runnerImage"),
 			BuilderPlatforms:     platforms,
 		}
-		ee := w.GetImageVariants()
-		fmt.Print(ee)
 		if err := w.Test(cmd.Context()); err != nil {
 			return err
 		}

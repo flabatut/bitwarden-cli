@@ -11,7 +11,6 @@ import (
 
 type Workflow struct {
 	Client               *dagger.Client
-	PublishAddr          string
 	ReleaseVersion       string
 	BuilderNodeJSVersion string
 	RunnerEntryPointPath string
