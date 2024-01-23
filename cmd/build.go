@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	// "dagger.io/dagger"
 
 	"github.com/flabatut/bitwarden-cli/pkg/build"
 	"github.com/spf13/cobra"
@@ -21,16 +22,27 @@ var buildCmd = &cobra.Command{
 	- push binaries to github`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("build called")
+
+		if !viper.IsSet("username") {
+			return fmt.Errorf("username env var must be set")
+		}
+		if !viper.IsSet("password") {
+			return fmt.Errorf("password env var must be set")
+		}
+
 		w := &build.Workflow{
 			Client:               daggerClient,
-			PublishAddr:          viper.GetString("publishAddr"),
 			ReleaseVersion:       viper.GetString("releaseVersion"),
 			BuilderNodeJSVersion: viper.GetString("builderNodeJSVersion"),
 			RunnerEntryPointPath: viper.GetString("runnerEntryPointPath"),
 			BuilderWorkDir:       viper.GetString("builderWorkDir"),
 			BuilderImage:         viper.GetString("builderImage"),
 			RunnerImage:          viper.GetString("runnerImage"),
+			RegistryFQDN:         viper.GetString("registryFQDN"),
+			ProjectNamespace:     viper.GetString("projectNamespace"),
 			BuilderPlatforms:     platforms,
+			RegistryUsername:     viper.GetString("username"),
+			RegistryPassword:     daggerClient.SetSecret("password", viper.GetString("password")),
 		}
 		if err := w.Build(cmd.Context()); err != nil {
 			return err
@@ -58,7 +70,8 @@ func init() {
 	viper.SetDefault("runnerImage", "docker.io/debian:bullseye-slim")                                 // same as Dockerfile FROM, image for final target container
 	viper.SetDefault("runnerEntryPointPath", "/entrypoint")                                           // same as Dockerfile ENTRYPOINT
 	viper.SetDefault("releaseVersion", "v2024.1.0")
-	viper.SetDefault("publishAddr", "ghcr.io/flabatut/bitwarden-cli:latest")
+	viper.SetDefault("registryFQDN", "ghcr.io")                    // TODO: revamp, remove publishaddress
+	viper.SetDefault("projectNamespace", "flabatut/bitwarden-cli") // TODO: make sure no / at the begining
 	// if using local registry (https://docs.dagger.io/252029/load-images-local-docker-engine/#approach-2-use-a-local-registry-server)
 	// viper.SetDefault("publishAddr", "localhost:5000/bitwarden-cli:latest")
 }

@@ -6,12 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	// "os"
+
 	"dagger.io/dagger"
 )
 
 type Workflow struct {
 	Client               *dagger.Client
-	PublishAddr          string
 	ReleaseVersion       string
 	BuilderNodeJSVersion string
 	RunnerEntryPointPath string
@@ -19,6 +20,10 @@ type Workflow struct {
 	BuilderImage         string
 	RunnerImage          string
 	BuilderPlatforms     []dagger.Platform
+	RegistryFQDN         string
+	ProjectNamespace     string
+	RegistryUsername     string
+	RegistryPassword     *dagger.Secret
 }
 
 func (w *Workflow) Build(ctx context.Context) error {
@@ -77,8 +82,12 @@ func (w *Workflow) Build(ctx context.Context) error {
 	}
 
 	// docker push
+	// TODO: validate registry URL
+	// TODO: support image name option
+	publishAddress := fmt.Sprintf("%s/%s:%s", w.RegistryFQDN, w.ProjectNamespace, w.ReleaseVersion)
 	imageDigest, err := w.Client.Container().
-		Publish(ctx, w.PublishAddr, dagger.ContainerPublishOpts{
+		WithRegistryAuth(w.RegistryFQDN, w.RegistryUsername, w.RegistryPassword).
+		Publish(ctx, publishAddress, dagger.ContainerPublishOpts{
 			PlatformVariants: containerPlatformVariants,
 		})
 	if err != nil {
@@ -116,3 +125,18 @@ func (w *Workflow) getTargetPlatform(platform dagger.Platform) (string, error) {
 	}
 	return fmt.Sprintf("%s-%s-%s", w.BuilderNodeJSVersion, osName, archName), nil
 }
+
+// // TODO: move to cmd/build.go
+// func (w *Workflow) getRegistryAuth() (string, *dagger.Secret, error) {
+// 	// load registry credentials from environment variables
+// 	username := os.Getenv("DOCKERHUB_USERNAME")
+// 	if username == "" {
+// 		return "", nil, fmt.Errorf("DOCKERHUB_USERNAME env var must be set")
+// 	}
+// 	passwordPlaintext := os.Getenv("DOCKERHUB_PASSWORD")
+// 	if passwordPlaintext == "" {
+// 		return "", nil, fmt.Errorf("DOCKERHUB_PASSWORD env var must be set")
+// 	}
+// 	password := w.Client.SetSecret("registryPassword", passwordPlaintext)
+// 	return username, password, nil
+// }

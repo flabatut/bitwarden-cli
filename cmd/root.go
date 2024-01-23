@@ -77,8 +77,8 @@ func initConfig() {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".bitwarden-cli")
 	}
-	viper.SetEnvPrefix("BWCLI_") // Support for env vars matching prefix below
-	viper.AutomaticEnv()         // read in environment variables that match
+	viper.SetEnvPrefix("BWCLI") // Support for env vars matching prefix below
+	viper.AutomaticEnv()        // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
