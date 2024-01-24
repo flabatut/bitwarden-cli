@@ -25,7 +25,7 @@
             ],
             "env": {
                 "BWCLI_USERNAME": "joe",
-                "BWCLI_PASSWORD": "pass"
+                "GITHUB_TOKEN": "pass"
             }
         }
     ]

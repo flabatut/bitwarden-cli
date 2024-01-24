@@ -35,10 +35,6 @@ var buildCmd = &cobra.Command{
 			return err
 		}
 
-		if !viper.IsSet("password") {
-			return fmt.Errorf("password env var must be set")
-		}
-
 		w := &build.Workflow{
 			Client:               daggerClient,
 			ReleaseVersion:       viper.GetString("releaseVersion"),
@@ -98,7 +94,7 @@ func getRegistryUsername() (string, error) {
 }
 
 func getRegistryPassword() (*dagger.Secret, error) {
-	// any viper field username found (works for env var BWCLI_USERNAME as well)
+	// any viper field password found (works for env var BWCLI_PASSWORD as well)
 	if viper.IsSet("password") {
 		return daggerClient.SetSecret("password", viper.GetString("password")), nil
 	}
