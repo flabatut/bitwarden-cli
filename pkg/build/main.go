@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	// "os"
-
 	"dagger.io/dagger"
 )
 
@@ -125,18 +123,3 @@ func (w *Workflow) getTargetPlatform(platform dagger.Platform) (string, error) {
 	}
 	return fmt.Sprintf("%s-%s-%s", w.BuilderNodeJSVersion, osName, archName), nil
 }
-
-// // TODO: move to cmd/build.go
-// func (w *Workflow) getRegistryAuth() (string, *dagger.Secret, error) {
-// 	// load registry credentials from environment variables
-// 	username := os.Getenv("DOCKERHUB_USERNAME")
-// 	if username == "" {
-// 		return "", nil, fmt.Errorf("DOCKERHUB_USERNAME env var must be set")
-// 	}
-// 	passwordPlaintext := os.Getenv("DOCKERHUB_PASSWORD")
-// 	if passwordPlaintext == "" {
-// 		return "", nil, fmt.Errorf("DOCKERHUB_PASSWORD env var must be set")
-// 	}
-// 	password := w.Client.SetSecret("registryPassword", passwordPlaintext)
-// 	return username, password, nil
-// }

@@ -12,6 +12,10 @@
 - support md5 checksum
 - tool pre-commit pour verif si fuite info sensible
 - package binaries
+- cache npm/deb,... content
+- remove node deprecation
+
+
 
 # HowTo
 
