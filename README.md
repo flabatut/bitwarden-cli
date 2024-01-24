@@ -1,4 +1,4 @@
-## Todo
+# Roadmap
 
 - golang ci job
 - golang ginkgo/unit test
@@ -11,6 +11,12 @@
 - use github API to retrieve zipfile
 - support md5 checksum
 - tool pre-commit pour verif si fuite info sensible
-
-
 - package binaries
+
+# HowTo
+
+## Add command
+
+```
+cobra-cli add lint --viper
+```

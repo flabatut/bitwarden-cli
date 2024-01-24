@@ -35,14 +35,17 @@ jobs:
       #     echo Add other actions to build,
       #     echo test, and deploy your project.
 
-
-      - name: Dagger for GitHub
-        # You may pin to the exact commit or the version.
-        # uses: dagger/dagger-for-github@e86a41a730841597c2b728134e83596e4e9c7804
+      - name: Lint
         uses: dagger/dagger-for-github@v5.1.0
         with:
           verb: run
-          # Arguments to pass to CLI
+          args: --silent go run main.go lint
+          
+          
+      - name: Build
+        uses: dagger/dagger-for-github@v5.1.0
+        with:
+          verb: run
           args: --silent go run main.go build
           
           
