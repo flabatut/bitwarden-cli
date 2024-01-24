@@ -47,6 +47,6 @@ jobs:
           verb: run
           args: --silent go run main.go build
         env:
-            GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           
           
