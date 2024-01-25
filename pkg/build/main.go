@@ -24,7 +24,7 @@ type Workflow struct {
 	RegistryPassword     *dagger.Secret
 }
 
-func (w *Workflow) Build(ctx context.Context) error {
+func (w *Workflow) Build(ctx context.Context) (*dagger.Container, error) {
 	fmt.Println("Building with Dagger")
 	var (
 		zipFile             = "cli-" + w.ReleaseVersion + ".zip"
@@ -55,7 +55,7 @@ func (w *Workflow) Build(ctx context.Context) error {
 		// forge npm pkg target platform name
 		targetPlatform, err := w.getTargetPlatform(platform)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		// extract os/arch from platform
 		var (
@@ -89,11 +89,11 @@ func (w *Workflow) Build(ctx context.Context) error {
 			PlatformVariants: containerPlatformVariants,
 		})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fmt.Println("published multi-platform image with digest", imageDigest)
 
-	return nil
+	return builder, nil
 }
 
 // getTargetPlatform returns the name of a npm pkg compatible target (<nodeVersion>-<os>-<arch>) based

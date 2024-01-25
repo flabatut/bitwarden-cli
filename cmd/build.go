@@ -25,31 +25,7 @@ var buildCmd = &cobra.Command{
 	- push binaries to github`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("build called")
-
-		username, err := getRegistryUsername()
-		if err != nil {
-			return err
-		}
-		password, err := getRegistryPassword()
-		if err != nil {
-			return err
-		}
-
-		w := &build.Workflow{
-			Client:               daggerClient,
-			ReleaseVersion:       viper.GetString("releaseVersion"),
-			BuilderNodeJSVersion: viper.GetString("builderNodeJSVersion"),
-			RunnerEntryPointPath: viper.GetString("runnerEntryPointPath"),
-			BuilderWorkDir:       viper.GetString("builderWorkDir"),
-			BuilderImage:         viper.GetString("builderImage"),
-			RunnerImage:          viper.GetString("runnerImage"),
-			RegistryFQDN:         viper.GetString("registryFQDN"),
-			ProjectNamespace:     viper.GetString("projectNamespace"),
-			BuilderPlatforms:     platforms,
-			RegistryUsername:     username,
-			RegistryPassword:     password,
-		}
-		if err := w.Build(cmd.Context()); err != nil {
+		if _, err := runBuildCmd(cmd); err != nil {
 			return err
 		}
 		return nil
@@ -103,4 +79,36 @@ func getRegistryPassword() (*dagger.Secret, error) {
 		return daggerClient.SetSecret("password", password), nil
 	}
 	return nil, fmt.Errorf("password for registry not found")
+}
+
+func runBuildCmd(cmd *cobra.Command) (*dagger.Container, error) {
+	username, err := getRegistryUsername()
+	if err != nil {
+		return nil, err
+	}
+	password, err := getRegistryPassword()
+	if err != nil {
+		return nil, err
+	}
+
+	job := &build.Workflow{
+		Client:               daggerClient,
+		ReleaseVersion:       viper.GetString("releaseVersion"),
+		BuilderNodeJSVersion: viper.GetString("builderNodeJSVersion"),
+		RunnerEntryPointPath: viper.GetString("runnerEntryPointPath"),
+		BuilderWorkDir:       viper.GetString("builderWorkDir"),
+		BuilderImage:         viper.GetString("builderImage"),
+		RunnerImage:          viper.GetString("runnerImage"),
+		RegistryFQDN:         viper.GetString("registryFQDN"),
+		ProjectNamespace:     viper.GetString("projectNamespace"),
+		BuilderPlatforms:     platforms,
+		RegistryUsername:     username,
+		RegistryPassword:     password,
+	}
+
+	ctr, err := job.Build(cmd.Context())
+	if err != nil {
+		return nil, err
+	}
+	return ctr, nil
 }
