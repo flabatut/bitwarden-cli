@@ -46,7 +46,14 @@ jobs:
         with:
           verb: run
           args: --silent go run main.go build
+          
+      - name: Publish images
+        uses: dagger/dagger-for-github@v5.1.0
+        with:
+          verb: run
+          args: --silent go run main.go publish image
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          
-          
+            
+            
+  
