@@ -98,3 +98,27 @@ func deferDaggerClient() {
 	err := daggerClient.Close()
 	cobra.CheckErr(err)
 }
+
+func getRegistryUsername() (string, error) {
+	// any viper field username found (works for env var BWCLI_USERNAME as well)
+	if viper.IsSet("username") {
+		return viper.GetString("username"), nil
+	}
+	// GITHUB_REPOSITORY_OWNER
+	if username, ok := os.LookupEnv("GITHUB_REPOSITORY_OWNER"); ok {
+		return username, nil
+	}
+	return "", fmt.Errorf("username for registry not found")
+}
+
+func getRegistryPassword() (*dagger.Secret, error) {
+	// any viper field password found (works for env var BWCLI_PASSWORD as well)
+	if viper.IsSet("password") {
+		return daggerClient.SetSecret("password", viper.GetString("password")), nil
+	}
+	// support for GITHUB_TOKEN
+	if password, ok := os.LookupEnv("GITHUB_TOKEN"); ok {
+		return daggerClient.SetSecret("password", password), nil
+	}
+	return nil, fmt.Errorf("password for registry not found")
+}

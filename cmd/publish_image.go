@@ -6,7 +6,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/flabatut/bitwarden-cli/pkg/publish/image"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // imageCmd represents the image command
@@ -21,7 +23,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("publish image called")
-		if _, err := runPublishImageCmd(cmd); err != nil {
+		if err := runPublishImageCmd(cmd); err != nil {
 			return err
 		}
 		return nil
@@ -42,7 +44,33 @@ func init() {
 	// imageCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func runPublishImageCmd(cmd *cobra.Command) (string, error) {
-	_, err := runBuildCmd(cmd)
-	return "", err
+func runPublishImageCmd(cmd *cobra.Command) error {
+	containers, err := runBuildCmd(cmd)
+	if err != nil {
+		return err
+	}
+	username, err := getRegistryUsername()
+	if err != nil {
+		return err
+	}
+	password, err := getRegistryPassword()
+	if err != nil {
+		return err
+	}
+
+	job := &image.Workflow{
+		Client:           daggerClient,
+		ReleaseVersion:   viper.GetString("releaseVersion"),
+		RegistryFQDN:     viper.GetString("registryFQDN"),
+		ProjectNamespace: viper.GetString("projectNamespace"),
+		RegistryUsername: username,
+		RegistryPassword: password,
+	}
+
+	err = job.Publish(cmd.Context(), containers)
+	if err != nil {
+		return err
+	}
+
+	return err
 }

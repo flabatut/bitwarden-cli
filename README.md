@@ -14,7 +14,7 @@
 - package binaries
 - cache npm/deb,... content
 - remove node deprecation
-
+- make registry auth optional
 
 
 # HowTo

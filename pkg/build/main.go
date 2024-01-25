@@ -18,13 +18,9 @@ type Workflow struct {
 	BuilderImage         string
 	RunnerImage          string
 	BuilderPlatforms     []dagger.Platform
-	RegistryFQDN         string
-	ProjectNamespace     string
-	RegistryUsername     string
-	RegistryPassword     *dagger.Secret
 }
 
-func (w *Workflow) Build(ctx context.Context) (*dagger.Container, error) {
+func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, error) {
 	fmt.Println("Building with Dagger")
 	var (
 		zipFile             = "cli-" + w.ReleaseVersion + ".zip"
@@ -79,21 +75,7 @@ func (w *Workflow) Build(ctx context.Context) (*dagger.Container, error) {
 		}
 	}
 
-	// docker push
-	// TODO: validate registry URL
-	// TODO: support image name option
-	publishAddress := fmt.Sprintf("%s/%s:%s", w.RegistryFQDN, w.ProjectNamespace, w.ReleaseVersion)
-	imageDigest, err := w.Client.Container().
-		WithRegistryAuth(w.RegistryFQDN, w.RegistryUsername, w.RegistryPassword).
-		Publish(ctx, publishAddress, dagger.ContainerPublishOpts{
-			PlatformVariants: containerPlatformVariants,
-		})
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("published multi-platform image with digest", imageDigest)
-
-	return builder, nil
+	return containerPlatformVariants, nil
 }
 
 // getTargetPlatform returns the name of a npm pkg compatible target (<nodeVersion>-<os>-<arch>) based
