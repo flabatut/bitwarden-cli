@@ -2,6 +2,10 @@
 
 name: CI
 
+# Set cache export environment
+env:
+  DAGGER_CACHE_FROM: type=gha,scope=dagger-cache
+  DAGGER_CACHE_TO: type=gha,mode=max,scope=dagger-cache
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
