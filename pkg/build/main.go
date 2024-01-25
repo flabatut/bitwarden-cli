@@ -9,6 +9,8 @@ import (
 	"dagger.io/dagger"
 )
 
+const containerDistDir = "/dist"
+
 type Workflow struct {
 	Client               *dagger.Client
 	ReleaseVersion       string
@@ -20,7 +22,7 @@ type Workflow struct {
 	BuilderPlatforms     []dagger.Platform
 }
 
-func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, error) {
+func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, *dagger.Directory, error) {
 	fmt.Println("Building with Dagger")
 	var (
 		zipFile             = "cli-" + w.ReleaseVersion + ".zip"
@@ -32,9 +34,9 @@ func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, error) {
 	// set environment variables
 	builder := w.Client.Container().
 		From(w.BuilderImage).
+		WithWorkdir(w.BuilderWorkDir).
 		WithEnvVariable("NODE_ENV", "production").
 		// Checkout release tarball
-		WithWorkdir(w.BuilderWorkDir).
 		WithExec([]string{"apt", "install", "-y", "make", "python3", "g++"}).
 		WithExec([]string{"wget", downloadUrl}).
 		WithExec([]string{"unzip", zipFile}).
@@ -51,7 +53,7 @@ func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, error) {
 		// forge npm pkg target platform name
 		targetPlatform, err := w.getTargetPlatform(platform)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		// extract os/arch from platform
 		var (
@@ -59,23 +61,25 @@ func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, error) {
 			archName = strings.Split(string(platform), "/")[1]
 		)
 		// forge binary output path
-		distOutput := filepath.Join(w.BuilderWorkDir, "bw-"+osName+"-"+archName)
+		distOutput := filepath.Join(containerDistDir, "bw-"+osName+"-"+archName)
 		// cross compile for platform
 		builder = builder.WithExec([]string{"npx", "pkg", ".", "--targets", targetPlatform, "--output", distOutput})
 
-		// create the runner
-		runner := w.Client.Container(dagger.ContainerOpts{Platform: platform}).
-			From(w.RunnerImage).
-			WithFile(w.RunnerEntryPointPath, builder.File(distOutput)).
-			WithEntrypoint([]string{w.RunnerEntryPointPath})
-
 		// only build docker images for linux supported
 		if osName == "linux" {
+			// create the image
+			runner := w.Client.Container(dagger.ContainerOpts{Platform: platform}).
+				From(w.RunnerImage).
+				WithFile(w.RunnerEntryPointPath, builder.File(distOutput)).
+				WithEntrypoint([]string{w.RunnerEntryPointPath})
+			// dont publish yet but append container in returned list
 			containerPlatformVariants = append(containerPlatformVariants, runner)
 		}
 	}
 
-	return containerPlatformVariants, nil
+	// keep artifacts
+	artifactPlatformVariants := builder.Directory(containerDistDir)
+	return containerPlatformVariants, artifactPlatformVariants, nil
 }
 
 // getTargetPlatform returns the name of a npm pkg compatible target (<nodeVersion>-<os>-<arch>) based

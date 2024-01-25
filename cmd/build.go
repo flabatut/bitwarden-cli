@@ -22,7 +22,7 @@ var buildCmd = &cobra.Command{
 	- push binaries to github`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("build called")
-		if _, err := runBuildCmd(cmd); err != nil {
+		if _, _, err := runBuildCmd(cmd); err != nil {
 			return err
 		}
 		return nil
@@ -42,7 +42,7 @@ func init() {
 	viper.SetDefault("projectNamespace", "flabatut/bitwarden-cli") // TODO: make sure no / at the begining , discover value
 }
 
-func runBuildCmd(cmd *cobra.Command) ([]*dagger.Container, error) {
+func runBuildCmd(cmd *cobra.Command) ([]*dagger.Container, *dagger.Directory, error) {
 	job := &build.Workflow{
 		Client:               daggerClient,
 		ReleaseVersion:       viper.GetString("releaseVersion"),
@@ -54,9 +54,9 @@ func runBuildCmd(cmd *cobra.Command) ([]*dagger.Container, error) {
 		BuilderPlatforms:     platforms,
 	}
 
-	containers, err := job.Build(cmd.Context())
+	containers, artifacts, err := job.Build(cmd.Context())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return containers, nil
+	return containers, artifacts, nil
 }

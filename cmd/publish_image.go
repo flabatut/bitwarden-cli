@@ -45,7 +45,7 @@ func init() {
 }
 
 func runPublishImageCmd(cmd *cobra.Command) error {
-	containers, err := runBuildCmd(cmd)
+	containers, _, err := runBuildCmd(cmd)
 	if err != nil {
 		return err
 	}
