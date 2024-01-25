@@ -9,6 +9,7 @@ import (
 	"dagger.io/dagger"
 )
 
+// TODO factorize
 const containerDistDir = "/dist"
 
 type Workflow struct {

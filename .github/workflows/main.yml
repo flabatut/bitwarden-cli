@@ -47,17 +47,17 @@ jobs:
             
   
 
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@main
+  # build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+  #     - uses: actions/checkout@main
 
-      - name: Build
-        uses: dagger/dagger-for-github@v5.1.0
-        with:
-          verb: run
-          args: --silent go run main.go build
+  #     - name: Build
+  #       uses: dagger/dagger-for-github@v5.1.0
+  #       with:
+  #         verb: run
+  #         args: --silent go run main.go build
           
 
 
@@ -77,6 +77,25 @@ jobs:
         with:
           verb: run
           args: --silent go run main.go publish image
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          
+  # This workflow contains a single job called "build"
+  publish_artifacts:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # - uses: actions/checkout@v3
+      - uses: actions/checkout@main
+
+      - name: Publish artifacts
+        uses: dagger/dagger-for-github@v5.1.0
+        with:
+          verb: run
+          args: --silent go run main.go publish artifact
         env:
           GITHUB_TOKEN: ${{ github.token }}
           

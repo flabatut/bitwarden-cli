@@ -34,10 +34,19 @@
                 "publish",
                 "image"
             ],
-            "env": {
-                "BWCLI_USERNAME": "joe",
-                "GITHUB_TOKEN": "pass"
-            }
+            "envFile": "${workspaceFolder}/.env",
+        },
+        {
+            "name": "publish artifact",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": [
+                "publish",
+                "artifact"
+            ],
+            "envFile": "${workspaceFolder}/.env",
         }
     ]
 }
