@@ -1,21 +1,36 @@
+# Description
+
+A project whose purpose is to build bitwarden-cli for various platforms and package it in various ways. 
+
+Supported platforms are:
+
+- darwin/arm64
+- darwin/amd64
+- linux/arm64
+- linux/amd64
+
+Supported packaging is:
+
+- standalone binary
+- docker image
+
+# Context
+
+- bitwarden-cli teams doesn't provide such platforms/packages
+- opportunity to practice go, cobra/viper, dagger.io and github ecosystem
+
 # Roadmap
 
-- golang ci job
 - golang ginkgo/unit test
-- use act
+- use act locally
 - config github action avec dagger
 - tester github action depuis vscode
 - config validargs constraints avec viper (ie: pour nodejs value limited choice)
-- make release version dynamic
-- github action when upstream release new version
+- github action when upstream release new version (with dependabot)
 - use github API to retrieve zipfile
-- support md5 checksum
 - tool pre-commit pour verif si fuite info sensible
-- package binaries
 - cache npm/deb,... content
-- remove node deprecation
 - make registry auth optional
-
 
 # HowTo
 
