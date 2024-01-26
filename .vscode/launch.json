@@ -25,6 +25,17 @@
             ]
         },
         {
+            "name": "release",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": [
+                "release",
+            ],
+            "envFile": "${workspaceFolder}/.env",
+        },
+        {
             "name": "publish image",
             "type": "go",
             "request": "launch",
@@ -45,6 +56,18 @@
             "args": [
                 "publish",
                 "artifact"
+            ],
+            "envFile": "${workspaceFolder}/.env",
+        },
+        {
+            "name": "publish all",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": [
+                "publish",
+                "all"
             ],
             "envFile": "${workspaceFolder}/.env",
         }

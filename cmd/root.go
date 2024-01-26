@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	cfgFile      string
-	daggerClient *dagger.Client
-	platforms    = []dagger.Platform{ // TODO: use viper with mapstruct
+	releaseVersion string
+	cfgFile        string
+	daggerClient   *dagger.Client
+	platforms      = []dagger.Platform{ // TODO: use viper with mapstruct
 		"darwin/amd64", // a.k.a. x86_64
 		"darwin/arm64", // a.k.a. aarch64
 		"linux/amd64",  // a.k.a. x86_64
@@ -121,4 +122,19 @@ func getRegistryPassword() (*dagger.Secret, error) {
 		return daggerClient.SetSecret("password", password), nil
 	}
 	return nil, fmt.Errorf("password for registry not found")
+}
+
+func markReleaseVersionRequired(cmd *cobra.Command) error {
+	cmd.Flags().StringVarP(&releaseVersion, "releaseVersion", "", "", "Release version(required)")
+
+	err := viper.BindPFlag("releaseVersion", cmd.Flags().Lookup("releaseVersion"))
+	if err != nil {
+		return err
+	}
+
+	err = viper.BindEnv("releaseVersion")
+	if err != nil {
+		return err
+	}
+	return nil
 }

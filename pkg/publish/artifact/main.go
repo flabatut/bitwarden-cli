@@ -28,28 +28,12 @@ func (w *Workflow) Publish(ctx context.Context, artifacts *dagger.Directory) err
 
 	publisher := w.Client.Container().
 		From("alpine:latest").
-		WithMountedDirectory(containerDistDir, artifacts).
-		WithEnvVariable("GH_DEBUG", "api").
 		WithEnvVariable("GH_REPO", ghRepo).
 		WithSecretVariable("GH_TOKEN", w.RegistryPassword).
-		WithWorkdir(containerDistDir).
-		WithExec([]string{"apk", "add", "github-cli"})
-
-	_, err := publisher.WithExec([]string{
-		"gh", "release", "view", w.ReleaseVersion,
-	}).Stdout(ctx)
-	if err != nil {
-		if strings.HasSuffix(err.Error(), "release not found") {
-			_, err = publisher.WithExec([]string{
-				"gh", "release", "create", w.ReleaseVersion, "-t", w.ReleaseVersion, "--generate-notes",
-			}).Stdout(ctx)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
+		WithExec([]string{"apk", "add", "github-cli"}).
+		WithMountedDirectory(containerDistDir, artifacts).
+		// WithEnvVariable("GH_DEBUG", "api").
+		WithWorkdir(containerDistDir)
 
 	for _, platform := range w.PlatformsVariants {
 		// extract os/arch from platform
@@ -58,11 +42,14 @@ func (w *Workflow) Publish(ctx context.Context, artifacts *dagger.Directory) err
 			archName = strings.Split(string(platform), "/")[1]
 		)
 		binaryName := fmt.Sprintf("bw-%s-%s", osName, archName)
+		md5SumName := fmt.Sprintf("bw-%s-%s.checksum", osName, archName)
 		publisher = publisher.WithExec([]string{
 			"gh", "release", "upload", w.ReleaseVersion, binaryName, "--clobber",
+		}).WithExec([]string{
+			"gh", "release", "upload", w.ReleaseVersion, md5SumName, "--clobber",
 		})
 	}
-	_, err = publisher.Stdout(ctx)
+	_, err := publisher.Stdout(ctx)
 	if err != nil {
 		return err
 	}

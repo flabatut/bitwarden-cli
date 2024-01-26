@@ -30,14 +30,6 @@ type Workflow struct {
 
 func (w *Workflow) Lint(ctx context.Context) error {
 
-	// fmt.Println("Linting with Dagger")
-	// var (
-	// 	zipFile             = "cli-" + w.ReleaseVersion + ".zip"
-	// 	downloadUrl         = "https://github.com/bitwarden/clients/archive/refs/tags/" + zipFile
-	// 	extractedZipDirName = "clients-cli-" + w.ReleaseVersion
-	// )
-	// docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.55.2 golangci-lint run -v
-
 	// get build context directory
 	contextDir := w.Client.Host().Directory(".")
 

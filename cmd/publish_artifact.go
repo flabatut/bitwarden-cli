@@ -32,6 +32,8 @@ to quickly create a Cobra application.`,
 
 func init() {
 	publishCmd.AddCommand(artifactCmd)
+	err := markReleaseVersionRequired(artifactCmd)
+	cobra.CheckErr(err)
 }
 
 func runPublishArtifactCmd(cmd *cobra.Command) error {
@@ -40,11 +42,18 @@ func runPublishArtifactCmd(cmd *cobra.Command) error {
 		return err
 	}
 
-	password, err := getRegistryPassword()
+	_, err = runReleaseCmd(cmd)
 	if err != nil {
 		return err
 	}
 
+	password, err := getRegistryPassword()
+	if err != nil {
+		return err
+	}
+	if !viper.IsSet("releaseVersion") {
+		return fmt.Errorf("required flag(s) releaseVersion not set")
+	}
 	job := &artifact.Workflow{
 		Client:            daggerClient,
 		ReleaseVersion:    viper.GetString("releaseVersion"),

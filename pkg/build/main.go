@@ -64,7 +64,11 @@ func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, *dagger.Dire
 		// forge binary output path
 		distOutput := filepath.Join(containerDistDir, "bw-"+osName+"-"+archName)
 		// cross compile for platform
-		builder = builder.WithExec([]string{"npx", "pkg", ".", "--targets", targetPlatform, "--output", distOutput})
+		builder = builder.WithExec([]string{
+			"npx", "pkg", ".", "--targets", targetPlatform, "--output", distOutput,
+		}).WithExec([]string{
+			"bash", "-c", fmt.Sprintf("md5sum %s > %s.checksum", distOutput, distOutput),
+		})
 
 		// only build docker images for linux supported
 		if osName == "linux" {

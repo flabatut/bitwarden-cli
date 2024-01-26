@@ -37,12 +37,18 @@ func init() {
 	viper.SetDefault("builderNodeJSVersion", "latest")                                                // vercel compatible format https://github.com/vercel/pkg
 	viper.SetDefault("runnerImage", "docker.io/debian:bullseye-slim")                                 // same as Dockerfile FROM, image for final target container
 	viper.SetDefault("runnerEntryPointPath", "/entrypoint")                                           // same as Dockerfile ENTRYPOINT
-	viper.SetDefault("releaseVersion", "v2024.1.0")
-	viper.SetDefault("registryFQDN", "ghcr.io")                    // TODO: revamp, remove publishaddress
-	viper.SetDefault("projectNamespace", "flabatut/bitwarden-cli") // TODO: make sure no / at the begining , discover value
+	viper.SetDefault("registryFQDN", "ghcr.io")                                                       // TODO: revamp, remove publishaddress
+	viper.SetDefault("projectNamespace", "flabatut/bitwarden-cli")                                    // TODO: make sure no / at the begining , discover value
+	// viper.SetDefault("releaseVersion", "v2024.1.0")
+
+	err := markReleaseVersionRequired(buildCmd)
+	cobra.CheckErr(err)
 }
 
 func runBuildCmd(cmd *cobra.Command) ([]*dagger.Container, *dagger.Directory, error) {
+	if !viper.IsSet("releaseVersion") {
+		return nil, nil, fmt.Errorf("required flag(s) releaseVersion not set")
+	}
 	job := &build.Workflow{
 		Client:               daggerClient,
 		ReleaseVersion:       viper.GetString("releaseVersion"),

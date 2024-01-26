@@ -32,16 +32,8 @@ to quickly create a Cobra application.`,
 
 func init() {
 	publishCmd.AddCommand(imageCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// imageCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// imageCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	err := markReleaseVersionRequired(imageCmd)
+	cobra.CheckErr(err)
 }
 
 func runPublishImageCmd(cmd *cobra.Command) error {
@@ -57,7 +49,9 @@ func runPublishImageCmd(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-
+	if !viper.IsSet("releaseVersion") {
+		return fmt.Errorf("required flag(s) releaseVersion not set")
+	}
 	job := &image.Workflow{
 		Client:           daggerClient,
 		ReleaseVersion:   viper.GetString("releaseVersion"),
