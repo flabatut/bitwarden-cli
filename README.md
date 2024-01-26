@@ -19,6 +19,11 @@ Supported packaging is:
 - bitwarden-cli teams doesn't provide such platforms/packages
 - opportunity to practice go, cobra/viper, dagger.io and github ecosystem
 
+# Design
+
+- go program running dagger client
+- using cobra/viper for CLI UI
+
 # Roadmap
 
 - golang ginkgo/unit test
