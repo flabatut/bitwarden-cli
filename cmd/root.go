@@ -75,6 +75,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".bitwarden-cli" (without extension).
 		viper.AddConfigPath(home)
+		viper.AddConfigPath(".") // optionally look for config in the working directory
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".bitwarden-cli")
 	}
