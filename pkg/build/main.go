@@ -26,6 +26,7 @@ type Workflow struct {
 func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, *dagger.Directory, error) {
 	fmt.Println("Building with Dagger")
 	var (
+		argonVersion        = "0.31.2"
 		zipFile             = "cli-" + w.ReleaseVersion + ".zip"
 		downloadUrl         = "https://github.com/bitwarden/clients/archive/refs/tags/" + zipFile
 		extractedZipDirName = "clients-cli-" + w.ReleaseVersion
@@ -44,7 +45,10 @@ func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, *dagger.Dire
 		// Configure build environment
 		WithWorkdir(filepath.Join(w.BuilderWorkDir, extractedZipDirName)).
 		WithExec([]string{"npm", "install", "--include", "dev"}).
-		// Build binaries
+		WithExec([]string{"curl", "-L", "-o", "argon2.tar.gz", "https://github.com/ranisalt/node-argon2/releases/download/v" + argonVersion + "/argon2-v" + argonVersion + "-napi-v3-linux-arm64-glibc.tar.gz"}).
+		WithExec([]string{"tar", "xvzf", "argon2.tar.gz"}).
+		WithExec([]string{"mv", "napi-v3/argon2.node", "node_modules/argon2/lib/binding/napi-v3/argon2.node"}).
+		WithExec([]string{"rm", "-rf", "argon2.tar.gz", "napi-v3"}).
 		WithWorkdir(filepath.Join(w.BuilderWorkDir, extractedZipDirName, "/apps/cli")).
 		WithExec([]string{"npm", "run", "build:prod"}).
 		WithExec([]string{"npm", "run", "clean"})

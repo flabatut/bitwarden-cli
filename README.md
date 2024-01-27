@@ -14,6 +14,11 @@ Supported packaging is:
 - standalone binary
 - docker image
 
+# Getting started
+
+1. create a `.env` to store any sensitive environment var and export them using: `export $(xargs <.env)`
+2. `dagger run go run main.go` to get CLI usage 
+
 # Context
 
 - bitwarden-cli teams doesn't provide such platforms/packages
@@ -26,6 +31,8 @@ Supported packaging is:
 
 # Roadmap
 
+- detector when new release upstream published
+- ability to run manual pipeline and set env var to force release version
 - golang ginkgo/unit test
 - use act locally
 - config github action avec dagger
