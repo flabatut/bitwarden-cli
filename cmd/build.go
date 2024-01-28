@@ -32,8 +32,7 @@ var buildCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(buildCmd)
 
-	viper.SetDefault("builderWorkDir", "/build") // same as Dockerfile WORKDIR
-	// viper.SetDefault("builderImage", "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye") // same as Dockerfile FROM, image for builder container
+	viper.SetDefault("builderWorkDir", "/build")                                                    // same as Dockerfile WORKDIR
 	viper.SetDefault("builderImage", "mcr.microsoft.com/devcontainers/typescript-node:18-bullseye") // same as Dockerfile FROM, image for builder container
 
 	viper.SetDefault("builderNodeJSVersion", "latest")                // vercel compatible format https://github.com/vercel/pkg
