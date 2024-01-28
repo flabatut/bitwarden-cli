@@ -12,6 +12,8 @@ import (
 // TODO factorize
 const containerDistDir = "/dist"
 const pkgTargets = "node18-linux-arm64,node18-linux-x64,node18-macos-arm64,node18-macos-x64"
+const argon2Version = "0.31.2"
+const argon2Arch = "arm64" // TODO get it dynamically
 
 type Workflow struct {
 	Client               *dagger.Client
@@ -53,7 +55,14 @@ func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, *dagger.Dire
 	builder = builder.
 		WithWorkdir(projectRootPath).
 		WithMountedCache(projectRootPath+"/node_modules", projectRootNodeCache).
-		WithExec([]string{"npm", "ci", "--include", "dev"})
+		WithExec([]string{"npm", "ci", "--include", "dev"}).
+		WithExec([]string{
+			// TODO discover argon2 version
+			// ARGON2_VERSION=$(grep '"argon2":' apps/cli/package.json | sed -e 's/.*"argon2": "\(.*\)",/\1/g')
+			// echo "ARGON2_VERSION: ${ARGON2_VERSION}"
+			"curl", "-s", "-o", "argon2.tar.gz", "-L", "https://github.com/ranisalt/node-argon2/releases/download/v" + argon2Version + "/argon2-v" + argon2Version + "-napi-v3-linux-" + argon2Arch + "-glibc.tar.gz",
+		}).WithExec([]string{"tar", "zxf", "argon2.tar.gz"}).
+		WithExec([]string{"mv", "napi-v3/argon2.node", "node_modules/argon2/lib/binding/napi-v3/argon2.node"})
 
 	// Configure cli build env
 	projectCliNodeCache := w.Client.CacheVolume("nodeCli")
