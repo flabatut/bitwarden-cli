@@ -26,7 +26,7 @@ type Workflow struct {
 func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, *dagger.Directory, error) {
 	fmt.Println("Building with Dagger")
 	var (
-		argonVersion        = "0.31.2"
+		// argonVersion = "0.31.2"
 		zipFile             = "cli-" + w.ReleaseVersion + ".zip"
 		downloadUrl         = "https://github.com/bitwarden/clients/archive/refs/tags/" + zipFile
 		extractedZipDirName = "clients-cli-" + w.ReleaseVersion
@@ -37,22 +37,24 @@ func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, *dagger.Dire
 	builder := w.Client.Container().
 		From(w.BuilderImage).
 		WithWorkdir(w.BuilderWorkDir).
-		WithEnvVariable("NODE_ENV", "production").
 		// Checkout release tarball
-		WithExec([]string{"apt", "install", "-y", "make", "python3", "g++"}).
-		WithExec([]string{"wget", downloadUrl}).
-		WithExec([]string{"unzip", zipFile}).
-		// Configure build environment
+		WithExec([]string{"apt-get", "update"}).
+		WithExec([]string{"apt-get", "install", "-y", "make", "python3", "g++"}).
+		WithExec([]string{"wget", "-q", downloadUrl}).
+		WithExec([]string{"unzip", "-q", zipFile})
+
+	// Configure global build environment
+	builder = builder.
 		WithWorkdir(filepath.Join(w.BuilderWorkDir, extractedZipDirName)).
-		WithExec([]string{"npm", "install", "--include", "dev"}).
-		WithExec([]string{"curl", "-L", "-o", "argon2.tar.gz", "https://github.com/ranisalt/node-argon2/releases/download/v" + argonVersion + "/argon2-v" + argonVersion + "-napi-v3-linux-arm64-glibc.tar.gz"}).
-		WithExec([]string{"tar", "xvzf", "argon2.tar.gz"}).
-		WithExec([]string{"mv", "napi-v3/argon2.node", "node_modules/argon2/lib/binding/napi-v3/argon2.node"}).
-		WithExec([]string{"rm", "-rf", "argon2.tar.gz", "napi-v3"}).
+		WithExec([]string{"npm", "ci", "--include", "dev"})
+
+	// Configure cli build env
+	builder = builder.
 		WithWorkdir(filepath.Join(w.BuilderWorkDir, extractedZipDirName, "/apps/cli")).
 		WithExec([]string{"npm", "run", "build:prod"}).
 		WithExec([]string{"npm", "run", "clean"})
 
+	// Create one container per cross env
 	containerPlatformVariants := make([]*dagger.Container, 0, len(w.BuilderPlatforms))
 	for _, platform := range w.BuilderPlatforms {
 		// forge npm pkg target platform name
@@ -86,7 +88,7 @@ func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, *dagger.Dire
 		}
 	}
 
-	// keep artifacts
+	// keep cross env build dir as artifact
 	artifactPlatformVariants := builder.Directory(containerDistDir)
 	return containerPlatformVariants, artifactPlatformVariants, nil
 }

@@ -32,13 +32,15 @@ var buildCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(buildCmd)
 
-	viper.SetDefault("builderWorkDir", "/build")                                                      // same as Dockerfile WORKDIR
-	viper.SetDefault("builderImage", "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye") // same as Dockerfile FROM, image for builder container
-	viper.SetDefault("builderNodeJSVersion", "latest")                                                // vercel compatible format https://github.com/vercel/pkg
-	viper.SetDefault("runnerImage", "docker.io/debian:bullseye-slim")                                 // same as Dockerfile FROM, image for final target container
-	viper.SetDefault("runnerEntryPointPath", "/entrypoint")                                           // same as Dockerfile ENTRYPOINT
-	viper.SetDefault("registryFQDN", "ghcr.io")                                                       // TODO: revamp, remove publishaddress
-	viper.SetDefault("projectNamespace", "flabatut/bitwarden-cli")                                    // TODO: make sure no / at the begining , discover value
+	viper.SetDefault("builderWorkDir", "/build") // same as Dockerfile WORKDIR
+	// viper.SetDefault("builderImage", "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye") // same as Dockerfile FROM, image for builder container
+	viper.SetDefault("builderImage", "mcr.microsoft.com/devcontainers/typescript-node:18-bullseye") // same as Dockerfile FROM, image for builder container
+
+	viper.SetDefault("builderNodeJSVersion", "latest")                // vercel compatible format https://github.com/vercel/pkg
+	viper.SetDefault("runnerImage", "docker.io/debian:bullseye-slim") // same as Dockerfile FROM, image for final target container
+	viper.SetDefault("runnerEntryPointPath", "/entrypoint")           // same as Dockerfile ENTRYPOINT
+	viper.SetDefault("registryFQDN", "ghcr.io")                       // TODO: revamp, remove publishaddress
+	viper.SetDefault("projectNamespace", "flabatut/bitwarden-cli")    // TODO: make sure no / at the begining , discover value
 	// viper.SetDefault("releaseVersion", "v2024.1.0")
 
 	err := markReleaseVersionRequired(buildCmd)
