@@ -71,7 +71,7 @@ func (w *Workflow) Build(ctx context.Context) ([]*dagger.Container, *dagger.Dire
 		distOutput := filepath.Join(containerDistDir, "bw-"+osName+"-"+archName)
 		// cross compile for platform
 		builder = builder.WithExec([]string{
-			"npx", "pkg", ".", "--targets", targetPlatform, "--output", distOutput,
+			"npx", "pkg", ".", "--public-packages", "--targets", targetPlatform, "--output", distOutput,
 		}).WithExec([]string{
 			"bash", "-c", fmt.Sprintf("md5sum %s > %s.checksum", distOutput, distOutput),
 		})
